@@ -18,8 +18,6 @@
  */
 
 using System;
-using System.Diagnostics;
-using System.IO;
 using System.Windows.Forms;
 
 namespace PDFBinder
@@ -28,35 +26,28 @@ namespace PDFBinder
     {
         public static MainForm MainForm { get; private set; }
 
+        /// <summary>
+        /// https://github.com/schourode/pdfbinder
+        /// </summary>
+        /// <param name="args"></param>
         [STAThread]
         static void Main(string[] args)
         {
-            // Start uninstallation if command line is /u {product-code}.
-            if (args.Length == 2 && args[0].Equals("/u", StringComparison.OrdinalIgnoreCase))
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
+
+            MainForm = new MainForm();
+
+            var fileNames = new string[args.Length];
+            Array.Copy(args, fileNames, args.Length);
+            Array.Sort(fileNames);
+
+            var loader = new ProcessLinker();
+            loader.SendFileList(fileNames);
+
+            if (loader.IsServer || args.Length == 0)
             {
-                Process msiexec = new Process();
-                msiexec.StartInfo.FileName = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "msiexec.exe");
-                msiexec.StartInfo.Arguments = "/i " + args[1];
-                msiexec.Start();
-            }
-            else
-            {
-                Application.EnableVisualStyles();
-                Application.SetCompatibleTextRenderingDefault(false);
-
-                Program.MainForm = new MainForm();
-
-                var fileNames = new string[args.Length];
-                Array.Copy(args, fileNames, args.Length);
-                Array.Sort(fileNames);
-
-                var loader = new ProcessLinker();
-                loader.SendFileList(fileNames);
-
-                if (loader.IsServer || args.Length == 0)
-                {
-                    Application.Run(Program.MainForm);
-                }
+                Application.Run(MainForm);
             }
         }
     }
